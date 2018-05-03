@@ -13,6 +13,7 @@ import org.apache.kafka.streams.state.KeyValueStore;
 
 import java.util.Arrays;
 import java.util.Properties;
+import java.util.concurrent.CountDownLatch;
 
 public class App 
 {
@@ -36,6 +37,26 @@ public class App
         wordCounts.toStream().to("streams-wordcount-output", Produced.with(Serdes.String(), Serdes.Long()));
 
         KafkaStreams streams = new KafkaStreams(builder.build(), config);
-        streams.start();
+        streams.start();  //or we can use the code bellow so we can control what to do when exit.
+
+        /*
+        final CountDownLatch latch = new CountDownLatch(1);
+
+        // attach shutdown handler to catch control-c
+        Runtime.getRuntime().addShutdownHook(new Thread("streams-shutdown-hook") {
+            @Override
+            public void run() {
+                streams.close();
+                latch.countDown();
+            }
+        });
+
+        try {
+            streams.start();
+            latch.await();
+        } catch (Throwable e) {
+            System.exit(1);
+        }
+        */
     }
 }
